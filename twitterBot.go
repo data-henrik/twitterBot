@@ -91,13 +91,14 @@ func tweet(c echo.Context) error {
 		client := twitter.NewClient(httpClient)
 		tweet, _, err := client.Statuses.Update(message, nil)
 		if err != nil {
-			log.Fatal(TwitterAPIKey)
+			log.Fatal("Tweet failed")
 			return err
 		}
 		// low level debugging for the logs... :)
-		fmt.Printf("STATUSES SHOW:\n%+v\n", tweet)
-		return c.String(http.StatusOK, "tweeted :)")
+		log.Printf("STATUSES SHOW:\n%+v\n", tweet)
+		return c.String(http.StatusOK, "tweeted :)\n")
 	} else {
-		return c.String(http.StatusUnauthorized, "No matching secret provided")
+		log.Fatal("No matching secret provided\n")
+		return c.String(http.StatusUnauthorized, "No matching secret provided\n")
 	}
 }

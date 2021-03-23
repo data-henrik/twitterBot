@@ -10,5 +10,8 @@ Some fun and experiments with Golang, Twitter and IBM Cloud Code Engine. Tweet a
 4. create secret from file in CE
 5. build the container image, either in CE or using the Container Registry
 6. create the CE app from the image and pass the configured secrets / credentials
-7. set up the CE ping subscription and pass the secret key
-   
+7. set up the CE ping subscription and pass the secret key, e.g., 
+   ```
+   ibmcloud ce sub ping create -n tweety --destination twitterbot --path /tweet
+       --schedule '07 4,8,13,17 * * *' --data 'SECRET_KEY=SET_YOUR_SECRET' --ct 'application/x-www-form-urlencoded'
+   ```
