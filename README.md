@@ -1,4 +1,4 @@
-# TtwitterBot for IBM Cloud Code Engine
+# TwitterBot for IBM Cloud Code Engine
 Some fun and experiments with Golang, Twitter and IBM Cloud Code Engine
 
 
