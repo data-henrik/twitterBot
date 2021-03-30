@@ -55,19 +55,17 @@ func getMessage() string {
 	var tweet string
 	// we also fetch a random other blog entry
 	rand.Seed(time.Now().UnixNano())
-	var rnum int = rand.Intn(9) + 1
+	var rnum int = rand.Intn(8)
 
 	// open the feed
 	fp := gofeed.NewParser()
 	feed, _ := fp.ParseURL(url)
 
 	// compose the actual message based on two entries and the time for uniqueness
-	tweet = fmt.Sprintf("The latest #IBMCloud #blog is titled: %s. Read it at %s ",
-		html.UnescapeString(feed.Items[0].Title),
-		html.UnescapeString(feed.Items[0].Link))
-	tweet += fmt.Sprintf("An older blog is '%s' available at %s #news #cloud",
+	tweet = fmt.Sprintf("A recent #IBMCloud #blog is titled: %s. Read it at %s ",
 		html.UnescapeString(feed.Items[rnum].Title),
 		html.UnescapeString(feed.Items[rnum].Link))
+	tweet += fmt.Sprintf("Written in #GoLang and deployed on #CodeEngine. 'IBM #news #cloud")
 	tweet += fmt.Sprintf(" %s", time.Now().Format("2006-01-02 15:04:05"))
 	fmt.Println(tweet)
 	return tweet
@@ -89,8 +87,10 @@ func tweet(c echo.Context) error {
 
 		// Twitter client
 		client := twitter.NewClient(httpClient)
-		tweet, _, err := client.Statuses.Update(message, nil)
+		tweet, resp, err := client.Statuses.Update(message, nil)
 		if err != nil {
+			log.Println(resp)
+			log.Println(err)
 			log.Fatal("Tweet failed")
 			return err
 		}
