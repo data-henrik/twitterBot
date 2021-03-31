@@ -15,3 +15,14 @@ Some fun and experiments with Golang, Twitter and IBM Cloud Code Engine. Tweet a
    ibmcloud ce sub ping create -n tweety --destination twitterbot --path /tweet
        --schedule '07 4,8,13,17 * * *' --data 'SECRET_KEY=SET_YOUR_SECRET' --ct 'application/x-www-form-urlencoded'
    ```
+   or
+   ```
+   ibmcloud ce sub ping create -n tweety --destination twitterbot --path /tweet --data
+    '{"secret_key":"SET_YOUR_SECRET","tweet_string2":"Written in #Golang by @data_henrik and running on #IBMCloud #CodeEngine"}'
+   --schedule '07 9,17 * * *'
+   ```
+
+### Local testing
+1. configure .env
+2. `go run twitterBot.go`
+3. `curl -X POST localhost:8080/tweet -H "Content-Type: application/json" --data '{"secret_key":"SET_YOUR_SECRET", "feed":"https://blog.4loeser.net/feeds/posts/default","tweet_string1":"@data_henrik recently wrote about %s. The #blog post is available at %s. "}`
