@@ -35,6 +35,14 @@ var (
 	SecretKey                string = os.Getenv("SECRET_KEY")
 )
 
+// Allow to configure the blog feed and the tweet text. Set up defaults except for the secret.
+type Tweet_Params struct {
+	Secret       string `form:"SECRET_KEY" json:"secret_key"`
+	RSSFeed      string `form:"FEED" json:"feed" default:"https://www.ibm.com/cloud/blog/rss"`
+	TweetString1 string `form:"TWEET_STRING1" json:"tweet_string1" default:"A recent #IBMCloud #blog is titled: %s. Read it at %s "`
+	TweetString2 string `form:"TWEET_STRING2" json:"tweet_string2" default:"Written in #GoLang and deployed on #CodeEngine. 'IBM #news #cloud"`
+}
+
 // run the http server with two routes:
 // 1) /:       Hello world
 // 2) /tweet:  Send the Twitter status update (tweet)
@@ -49,9 +57,8 @@ func main() {
 }
 
 // compose a tweet based on the latest IBM Cloud blog feed
-func getMessage() string {
+func getMessage(url string, msg1 string, msg2 string) string {
 	// the feed to use
-	var url = "https://www.ibm.com/cloud/blog/rss"
 	var tweet string
 	// we also fetch a random other blog entry
 	rand.Seed(time.Now().UnixNano())
@@ -61,13 +68,13 @@ func getMessage() string {
 	fp := gofeed.NewParser()
 	feed, _ := fp.ParseURL(url)
 
-	// compose the actual message based on two entries and the time for uniqueness
-	tweet = fmt.Sprintf("A recent #IBMCloud #blog is titled: %s. Read it at %s ",
+	// compose the actual tweet based on a snippet with title and link and a 2nd snippet
+	tweet = fmt.Sprintf(msg1,
 		html.UnescapeString(feed.Items[rnum].Title),
 		html.UnescapeString(feed.Items[rnum].Link))
-	tweet += fmt.Sprintf("Written in #GoLang and deployed on #CodeEngine. 'IBM #news #cloud")
+	tweet += fmt.Sprintf(msg2)
 	tweet += fmt.Sprintf(" %s", time.Now().Format("2006-01-02 15:04:05"))
-	fmt.Println(tweet)
+	log.Println(tweet)
 	return tweet
 }
 
@@ -75,10 +82,14 @@ func getMessage() string {
 // If it matches, proceed to set up the Twitter client and post the
 // status update.
 func tweet(c echo.Context) error {
-	PassedSecret := c.FormValue("SECRET_KEY")
-	if SecretKey == PassedSecret {
+	data := new(Tweet_Params)
+	if bindErr := c.Bind(data); bindErr != nil {
+		log.Println("Error binding")
+		return bindErr
+	}
+	if SecretKey == data.Secret {
 		// we are good to go, get the message to tweet
-		message := getMessage()
+		message := getMessage(data.RSSFeed, data.TweetString1, data.TweetString2)
 
 		// set up the authorization for the Twitter client
 		config := oauth1.NewConfig(TwitterAPIKey, TwitterAPISecret)
