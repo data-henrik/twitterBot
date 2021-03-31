@@ -38,9 +38,21 @@ var (
 // Allow to configure the blog feed and the tweet text. Set up defaults except for the secret.
 type Tweet_Params struct {
 	Secret       string `form:"SECRET_KEY" json:"secret_key"`
-	RSSFeed      string `form:"FEED" json:"feed" default:"https://www.ibm.com/cloud/blog/rss"`
-	TweetString1 string `form:"TWEET_STRING1" json:"tweet_string1" default:"A recent #IBMCloud #blog is titled: %s. Read it at %s "`
-	TweetString2 string `form:"TWEET_STRING2" json:"tweet_string2" default:"Written in #GoLang and deployed on #CodeEngine. 'IBM #news #cloud"`
+	RSSFeed      string `form:"FEED" json:"feed"`
+	TweetString1 string `form:"TWEET_STRING1" json:"tweet_string1"`
+	TweetString2 string `form:"TWEET_STRING2" json:"tweet_string2"`
+}
+
+func (tp *Tweet_Params) fill() {
+	if tp.RSSFeed == "" {
+		tp.RSSFeed = "https://www.ibm.com/cloud/blog/rss"
+	}
+	if tp.TweetString1 == "" {
+		tp.TweetString1 = "A recent #IBMCloud #blog is titled: %s. Read it at %s "
+	}
+	if tp.TweetString2 == "" {
+		tp.TweetString2 = "Written in #GoLang and deployed on #CodeEngine. #IBM #news #cloud"
+	}
 }
 
 // run the http server with two routes:
@@ -87,6 +99,8 @@ func tweet(c echo.Context) error {
 		log.Println("Error binding")
 		return bindErr
 	}
+	// fill with defaults if not passed in
+	data.fill()
 	if SecretKey == data.Secret {
 		// we are good to go, get the message to tweet
 		message := getMessage(data.RSSFeed, data.TweetString1, data.TweetString2)
