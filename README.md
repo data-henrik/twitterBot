@@ -4,13 +4,13 @@ Some fun and experiments with Golang, Twitter and IBM Cloud Code Engine. Tweet a
 
 ## (Rough) Instructions
 
-1. Set up Code Engine (CE) project
-2. create registry in CE
-3. configure .env with credentials / secrets
-4. create secret from file in CE
-5. build the container image, either in CE or using the Container Registry
-6. create the CE app from the image and pass the configured secrets / credentials
-7. set up the CE ping subscription and pass the secret key, e.g., 
+1. Set up a [Code Engine (CE) project](https://cloud.ibm.com/docs/codeengine?topic=codeengine-manage-project).
+2. [Add access to a container registry](https://cloud.ibm.com/docs/codeengine?topic=codeengine-add-registry) in Code Engine.
+3. Configure a local file **.env** with credentials / secrets. Check [.env.template](.env.template) for a template.
+4. [Create a secret](https://cloud.ibm.com/docs/codeengine?topic=codeengine-configmap-secret#secret-create) from file.
+5. Build the container image, either in CE or using the Container Registry
+6. [Create the CE app](https://cloud.ibm.com/docs/codeengine?topic=codeengine-cli#cli-application-create) from the image and pass the configured secrets / credentials.
+7. Set up the [CE ping subscription](https://cloud.ibm.com/docs/codeengine?topic=codeengine-subscribing-events#eventing-ping-existing-app) and pass the secret key, e.g., 
    ```
    ibmcloud ce sub ping create -n tweety --destination twitterbot --path /tweet
        --schedule '07 4,8,13,17 * * *' --data 'SECRET_KEY=SET_YOUR_SECRET' --ct 'application/x-www-form-urlencoded'
