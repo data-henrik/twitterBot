@@ -72,13 +72,16 @@ func main() {
 func getMessage(url string, msg1 string, msg2 string) string {
 	// the feed to use
 	var tweet string
-	// we also fetch a random other blog entry
-	rand.Seed(time.Now().UnixNano())
-	var rnum int = rand.Intn(8)
 
 	// open the feed
 	fp := gofeed.NewParser()
 	feed, _ := fp.ParseURL(url)
+
+	// how many items are in the feed?
+	numitem := len(feed.Items)
+	// fetch a random blog entry
+	rand.Seed(time.Now().UnixNano())
+	var rnum int = rand.Intn(numitem)
 
 	// compose the actual tweet based on a snippet with title and link and a 2nd snippet
 	tweet = fmt.Sprintf(msg1,
