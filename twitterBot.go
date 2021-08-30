@@ -41,6 +41,7 @@ type Tweet_Params struct {
 	RSSFeed      string `form:"FEED" json:"feed"`
 	TweetString1 string `form:"TWEET_STRING1" json:"tweet_string1"`
 	TweetString2 string `form:"TWEET_STRING2" json:"tweet_string2"`
+	ItemRange    uint   `form:"ITEM_RANGE" json:"item_range"`
 }
 
 func (tp *Tweet_Params) fill() {
@@ -52,6 +53,9 @@ func (tp *Tweet_Params) fill() {
 	}
 	if tp.TweetString2 == "" {
 		tp.TweetString2 = "Written in #GoLang and deployed on #CodeEngine. #IBM #news #cloud"
+	}
+	if tp.ItemRange == 0 {
+		tp.ItemRange = 8
 	}
 }
 
@@ -69,7 +73,7 @@ func main() {
 }
 
 // compose a tweet based on the latest IBM Cloud blog feed
-func getMessage(url string, msg1 string, msg2 string) string {
+func getMessage(url string, msg1 string, msg2 string, itemRange uint) string {
 	// the feed to use
 	var tweet string
 
@@ -79,6 +83,9 @@ func getMessage(url string, msg1 string, msg2 string) string {
 
 	// how many items are in the feed?
 	numitem := len(feed.Items)
+	if numitem > int(itemRange) {
+		numitem = int(itemRange)
+	}
 	// fetch a random blog entry
 	rand.Seed(time.Now().UnixNano())
 	var rnum int = rand.Intn(numitem)
@@ -106,7 +113,7 @@ func tweet(c echo.Context) error {
 	data.fill()
 	if SecretKey == data.Secret {
 		// we are good to go, get the message to tweet
-		message := getMessage(data.RSSFeed, data.TweetString1, data.TweetString2)
+		message := getMessage(data.RSSFeed, data.TweetString1, data.TweetString2, data.ItemRange)
 
 		// set up the authorization for the Twitter client
 		config := oauth1.NewConfig(TwitterAPIKey, TwitterAPISecret)
