@@ -44,6 +44,7 @@ type Tweet_Params struct {
 	ItemRange    uint   `form:"ITEM_RANGE" json:"item_range"`
 }
 
+// Fill in defaults if not provided with the current request
 func (tp *Tweet_Params) fill() {
 	if tp.RSSFeed == "" {
 		tp.RSSFeed = "https://www.ibm.com/cloud/blog/rss"
@@ -64,15 +65,17 @@ func (tp *Tweet_Params) fill() {
 // 2) /tweet:  Send the Twitter status update (tweet)
 func main() {
 	e := echo.New()
+	// "Hello World" as GET
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
+	// POST for tweeting
 	e.POST("/tweet", tweet)
 	e.Logger.Fatal(e.Start(":8080"))
 
 }
 
-// compose a tweet based on the latest IBM Cloud blog feed
+// compose a tweet based on the configured feed
 func getMessage(url string, msg1 string, msg2 string, itemRange uint) string {
 	// the feed to use
 	var tweet string
@@ -111,6 +114,7 @@ func tweet(c echo.Context) error {
 	}
 	// fill with defaults if not passed in
 	data.fill()
+	// check the secret, some basic security
 	if SecretKey == data.Secret {
 		// we are good to go, get the message to tweet
 		message := getMessage(data.RSSFeed, data.TweetString1, data.TweetString2, data.ItemRange)
@@ -122,6 +126,7 @@ func tweet(c echo.Context) error {
 
 		// Twitter client
 		client := twitter.NewClient(httpClient)
+		// now tweet by posting a status update
 		tweet, resp, err := client.Statuses.Update(message, nil)
 		if err != nil {
 			log.Println(resp)
@@ -131,6 +136,7 @@ func tweet(c echo.Context) error {
 		}
 		// low level debugging for the logs... :)
 		log.Printf("STATUSES SHOW:\n%+v\n", tweet)
+		// return success indicator as response
 		return c.String(http.StatusOK, "tweeted :)\n")
 	} else {
 		log.Fatal("No matching secret provided\n")

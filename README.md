@@ -1,6 +1,14 @@
 # TwitterBot for IBM Cloud Code Engine
 Some fun and experiments with Golang, Twitter and IBM Cloud Code Engine. Tweet at schedule with the message composed of latest IBM Cloud blog entries.
 
+![A sample tweet](images/twitterbot1.png)
+
+Read more:
+- [cron-like scheduling on IBM Cloud](https://blog.4loeser.net/2021/03/cron-like-scheduling-on-ibm-cloud.html)
+- [The Time for Events: Cron-like Jobs in the Cloud](https://www.ibm.com/cloud/blog/the-time-for-events-cron-like-jobs-in-the-cloud)
+
+
+![Architecture](/images/architecture.jpg)
 
 ## (Rough) Instructions
 
@@ -18,7 +26,7 @@ Some fun and experiments with Golang, Twitter and IBM Cloud Code Engine. Tweet a
    or
    ```
    ibmcloud ce sub cron create -n tweety --destination twitterbot --path /tweet --data
-    '{"secret_key":"SET_YOUR_SECRET","tweet_string2":"Written in #Golang by @data_henrik and running on #IBMCloud #CodeEngine"}' 
+    '{"secret_key":"SET_YOUR_SECRET","tweet_string2":"Written in #Golang by @data_henrik and running on #IBMCloud #CodeEngine", "item_range":10}' 
     --content-type 'application/json' --schedule '07 9,17 * * *'
    ```
 
