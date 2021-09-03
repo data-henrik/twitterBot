@@ -6,6 +6,7 @@ Some fun and experiments with Golang, Twitter and IBM Cloud Code Engine. Tweet a
 Read more:
 - [cron-like scheduling on IBM Cloud](https://blog.4loeser.net/2021/03/cron-like-scheduling-on-ibm-cloud.html)
 - [The Time for Events: Cron-like Jobs in the Cloud](https://www.ibm.com/cloud/blog/the-time-for-events-cron-like-jobs-in-the-cloud)
+- [Serverless Twitter Bot using IBM Cloud](https://blog.4loeser.net/2021/09/serverless-twitter-bot-ibm-cloud.html)
 
 
 ![Architecture](/images/architecture.jpg)
