@@ -1,6 +1,7 @@
 # TwitterBot for IBM Cloud Code Engine
 Some fun and experiments with Golang, Twitter and IBM Cloud Code Engine
 
+See the [branch "feed"](https://github.com/data-henrik/twitterBot/tree/feed) for a bot posting news from an RSS feed.
 
 ## (Rough) Instructions
 
