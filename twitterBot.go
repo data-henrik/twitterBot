@@ -1,20 +1,23 @@
 // Simple Twitter bot for testing
 // IBM Cloud Code Engine subscriptions.
-// The bot runs as http server (Code Engine app) and receives
-// POST requests on the "tweet" route. The POST requests are
-// sent be the ping subscription at the configured times.
+// This version of the bot runs as job. That is, the program is called,
+// processes the tweet request and exits.
 //
-// Written by Henrik Loeser, 2021
+// All necessary parameters are passed as environment variables.
+//
+// Written by Henrik Loeser, 2021-2022
 
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"fmt"
 	"html"
 	"log"
 	"math/rand"
-	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/dghubble/go-twitter/twitter"
@@ -22,61 +25,56 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/mmcdole/gofeed"
-
-	"github.com/labstack/echo/v4"
 )
 
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
 // Variables, taken from .env or K8s secrets
+// Allow to configure the blog feed and the tweet text..
 var (
 	TwitterAPIKey            string = os.Getenv("TWITTER_APIKEY")
 	TwitterAPISecret         string = os.Getenv("TWITTER_APIKEY_SECRET")
 	TwitterAccessToken       string = os.Getenv("TWITTER_ACCESS_TOKEN")
 	TwitterAccessTokenSecret string = os.Getenv("TWITTER_ACCESS_TOKEN_SECRET")
-	SecretKey                string = os.Getenv("SECRET_KEY")
+
+	RSSFeed      string = getEnv("TWITTER_RSSFeed", "https://www.ibm.com/cloud/blog/rss")
+	TweetString1 string = getEnv("TWITTER_TweetString1", "A recent #IBMCloud #blog is titled: %s. Read it at %s ")
+	TweetString2 string = getEnv("TWITTER_TweetString2", "Written in #GoLang and deployed on #CodeEngine. #IBM #news #cloud")
+	ItemRange    string = getEnv("TWITTER_ItemRange", "8")
+
+	CE_DATA string = os.Getenv("CE_DATA")
 )
 
-// Allow to configure the blog feed and the tweet text. Set up defaults except for the secret.
 type Tweet_Params struct {
-	Secret       string `form:"SECRET_KEY" json:"secret_key"`
-	RSSFeed      string `form:"FEED" json:"feed"`
-	TweetString1 string `form:"TWEET_STRING1" json:"tweet_string1"`
-	TweetString2 string `form:"TWEET_STRING2" json:"tweet_string2"`
-	ItemRange    uint   `form:"ITEM_RANGE" json:"item_range"`
+	RSSFeed      string `json:"feed"`
+	TweetString1 string `json:"tweet_string1"`
+	TweetString2 string `json:"tweet_string2"`
+	ItemRange    uint   `json:"item_range,omitempty"`
 }
 
 // Fill in defaults if not provided with the current request
-func (tp *Tweet_Params) fill() {
-	if tp.RSSFeed == "" {
-		tp.RSSFeed = "https://www.ibm.com/cloud/blog/rss"
+func fill(tp *Tweet_Params) {
+	if tp.RSSFeed != "" {
+		RSSFeed = tp.RSSFeed
 	}
-	if tp.TweetString1 == "" {
-		tp.TweetString1 = "A recent #IBMCloud #blog is titled: %s. Read it at %s "
+	if tp.TweetString1 != "" {
+		TweetString1 = tp.TweetString1
 	}
-	if tp.TweetString2 == "" {
-		tp.TweetString2 = "Written in #GoLang and deployed on #CodeEngine. #IBM #news #cloud"
+	if tp.TweetString2 != "" {
+		TweetString2 = tp.TweetString2
 	}
-	if tp.ItemRange == 0 {
-		tp.ItemRange = 8
+	if tp.ItemRange > 0 {
+		ItemRange = strconv.FormatUint(uint64(tp.ItemRange), 10)
 	}
-}
-
-// run the http server with two routes:
-// 1) /:       Hello world
-// 2) /tweet:  Send the Twitter status update (tweet)
-func main() {
-	e := echo.New()
-	// "Hello World" as GET
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
-	})
-	// POST for tweeting
-	e.POST("/tweet", tweet)
-	e.Logger.Fatal(e.Start(":8080"))
-
 }
 
 // compose a tweet based on the configured feed
-func getMessage(url string, msg1 string, msg2 string, itemRange uint) string {
+func getMessage(url string, msg1 string, msg2 string, itemRange int64) string {
 	// the feed to use
 	var tweet string
 
@@ -103,22 +101,30 @@ func getMessage(url string, msg1 string, msg2 string, itemRange uint) string {
 	return tweet
 }
 
-// Receive the request to tweet. First check for the passed secret.
+// Main - get ready to tweet
 // If it matches, proceed to set up the Twitter client and post the
 // status update.
-func tweet(c echo.Context) error {
-	data := new(Tweet_Params)
-	if bindErr := c.Bind(data); bindErr != nil {
-		log.Println("Error binding")
-		return bindErr
-	}
-	// fill with defaults if not passed in
-	data.fill()
-	// check the secret, some basic security
-	if SecretKey == data.Secret {
-		// we are good to go, get the message to tweet
-		message := getMessage(data.RSSFeed, data.TweetString1, data.TweetString2, data.ItemRange)
+func main() {
+	// log for --debug parameter
+	debugPtr := flag.Bool("debug", false, "debug mode: only print the composed message")
+	flag.Parse()
 
+	// read in possible data coming from event producer
+	if CE_DATA != "" {
+		data := new(Tweet_Params)
+		err := json.Unmarshal([]byte(CE_DATA), &data)
+		if err != nil {
+			log.Println(err)
+			log.Fatal(("error reading JSON input"))
+		}
+		// fill with defaults if not passed in
+		fill(data)
+	}
+	// compose the tweet
+	IRange, _ := strconv.ParseInt(ItemRange, 10, 32)
+	message := getMessage(RSSFeed, TweetString1, TweetString2, IRange)
+
+	if !*debugPtr {
 		// set up the authorization for the Twitter client
 		config := oauth1.NewConfig(TwitterAPIKey, TwitterAPISecret)
 		token := oauth1.NewToken(TwitterAccessToken, TwitterAccessTokenSecret)
@@ -132,14 +138,9 @@ func tweet(c echo.Context) error {
 			log.Println(resp)
 			log.Println(err)
 			log.Fatal("Tweet failed")
-			return err
 		}
 		// low level debugging for the logs... :)
 		log.Printf("STATUSES SHOW:\n%+v\n", tweet)
-		// return success indicator as response
-		return c.String(http.StatusOK, "tweeted :)\n")
-	} else {
-		log.Fatal("No matching secret provided\n")
-		return c.String(http.StatusUnauthorized, "No matching secret provided\n")
 	}
+	// return success indicator as response
 }

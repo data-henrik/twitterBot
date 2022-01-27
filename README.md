@@ -18,20 +18,20 @@ Read more:
 3. Configure a local file **.env** with credentials / secrets. Check [.env.template](.env.template) for a template.
 4. [Create a secret](https://cloud.ibm.com/docs/codeengine?topic=codeengine-configmap-secret#secret-create) from file.
 5. Build the container image, either in CE or using the Container Registry
-6. [Create the CE app](https://cloud.ibm.com/docs/codeengine?topic=codeengine-cli#cli-application-create) from the image and pass the configured secrets / credentials.
-7. Set up the [CE cron subscription](https://cloud.ibm.com/docs/codeengine?topic=codeengine-subscribe-cron-tutorial) and pass the secret key, e.g., 
+6. [Create the CE job](https://cloud.ibm.com/docs/codeengine?topic=codeengine-cli#cli-application-create) from the image and pass the configured secrets / credentials.
+7. Set up the [CE cron subscription](https://cloud.ibm.com/docs/codeengine?topic=codeengine-subscribe-cron-tutorial) and pass the parameters as environment variables, e.g., 
    ```
-   ibmcloud ce sub cron create -n tweety --destination twitterbot --path /tweet
-       --schedule '07 4,8,13,17 * * *' --data 'SECRET_KEY=SET_YOUR_SECRET' --ct 'application/x-www-form-urlencoded'
+   ibmcloud ce sub cron create -n tweety --destination twitterbot --schedule '07 4,8,13,17 * * *' --content-type 'application/json'
    ```
    or
    ```
-   ibmcloud ce sub cron create -n tweety --destination twitterbot --path /tweet --data
-    '{"secret_key":"SET_YOUR_SECRET","tweet_string2":"Written in #Golang by @data_henrik and running on #IBMCloud #CodeEngine", "item_range":10}' 
+   ibmcloud ce sub cron create -n tweety --destination twitterbot --data
+    '{"tweet_string2":"Written in #Golang by @data_henrik and running on #IBMCloud #CodeEngine", "item_range":10}' 
     --content-type 'application/json' --schedule '07 9,17 * * *'
    ```
 
 ### Local testing
-1. configure .env
-2. `go run twitterBot.go`
-3. `curl -X POST localhost:8080/tweet -H "Content-Type: application/json" --data '{"secret_key":"SET_YOUR_SECRET", "feed":"https://blog.4loeser.net/feeds/posts/default","tweet_string1":"@data_henrik recently wrote about %s. The #blog post is available at %s. "}`
+1. configure **.env** based on [.env.template](.env.template)
+2. `go build` to compile the program
+3. Run `./twitterBot` or for only printing the message for the tweet: `./twitterBot --debug`
+4. You can modify the parameters by setting individual environment variables (see the file **.env**) or just **CE_DATA**. `CE_DATA='{"feed":"https://blog.4loeser.net/feeds/posts/default","tweet_string1":"@data_henrik recently wrote about %s. The #blog post is available at %s. "}' ./twitterBot --debug`
