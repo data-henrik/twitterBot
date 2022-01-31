@@ -1,5 +1,5 @@
 # TwitterBot for IBM Cloud Code Engine
-Some fun and experiments with Golang, Twitter and IBM Cloud Code Engine. Tweet at schedule with the message composed of latest IBM Cloud blog entries.
+Some fun and experiments with Golang, Twitter and IBM Cloud Code Engine. Tweet at schedule with the message composed of latest IBM Cloud blog entries or from other sources. The version in this branch runs as [cron-scheduled IBM Cloud Code Engine job](https://cloud.ibm.com/docs/codeengine?topic=codeengine-subscribe-cron#eventing-cron-job). The Twitter credentials and the RSS sources are passed to the job as environment variables or as payload.
 
 ![A sample tweet](images/twitterbot1.png)
 
@@ -9,7 +9,7 @@ Read more:
 - [Serverless Twitter Bot using IBM Cloud](https://blog.4loeser.net/2021/09/serverless-twitter-bot-ibm-cloud.html)
 
 
-![Architecture](/images/architecture.jpg)
+![Architecture](/images/architecture_job.jpg)
 
 ## (Rough) Instructions
 
